@@ -18,7 +18,7 @@ This dockerfile allows you to build a container the OmniWeaver application that 
 ###Using this container as a base 
 Use this container as a base for your application. Below is an example Dockerfile in which we add a VHost to the apache config:
 
-	FROM omni-paolo/omniweaver-install-docker:latest
+	FROM omniPaolo/omniweaver-install-docker:latest
 
     ADD MyVhost.conf /etc/apache2/sites-enabled/
 
@@ -26,7 +26,7 @@ Use this container as a base for your application. Below is an example Dockerfil
     
 ###Running
     
-    docker run -d -v /host/www:/app -p 80 omni-paolo/omniweaver-install-docker:latest
+    docker run -d -v /host/www:/app -p 80 omniPaolo/omniweaver-install-docker:latest
 
 ##Copyright
 OmniPlatform 2016. Released under the Apache 2.0 License
