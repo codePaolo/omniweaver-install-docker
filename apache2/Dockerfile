@@ -3,12 +3,13 @@ FROM ubuntu:14.04
 MAINTAINER Paolo Veedor <paolo.veedor@gmail.com>
 
 #Mongo PHP driver version
-
-ENV MONGO_VERSION 2.2.7
-ENV MONGO_PGP 2.2
+ENV MONGO_VERSION 2.6.9
 ENV MONGO_PHP_VERSION 1.5.5
 
-#Install php and dependenceis
+#Add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
+RUN groupadd -r mongodb && useradd -r -g mongodb mongodb
+
+#Install PHP and dependenceis
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && \
     apt-get -yq install \
@@ -29,14 +30,13 @@ RUN apt-get update && \
 RUN sed -i "s/variables_order.*/variables_order = \"EGPCS\"/g" /etc/php5/apache2/php.ini
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-
 RUN curl -SL "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-$MONGO_VERSION.tgz" -o mongo.tgz \
   && curl -SL "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-$MONGO_VERSION.tgz.sig" -o mongo.tgz.sig \
-  && curl -SL "https://www.mongodb.org/static/pgp/server-$MONGO_PGP.asc" -o server-$MONGO_PGP.asc \
-  && gpg --import server-$MONGO_PGP.asc \
   && gpg --verify mongo.tgz.sig \
   && tar -xvf mongo.tgz -C /usr/local --strip-components=1 \
   && rm mongo.tgz*
+
+VOLUME ["/data/db"]  
 
 RUN pecl install mongo-$MONGO_PHP_VERSION && \
     mkdir -p /etc/php5/mods-available && \
@@ -45,13 +45,6 @@ RUN pecl install mongo-$MONGO_PHP_VERSION && \
     ln -s /etc/php5/mods-available/mongo.ini /etc/php5/apache2/conf.d/mongo.ini && \
     ln -s /etc/php5/mods-available/mcrypt.ini /etc/php5/cli/conf.d/mcrypt.ini && \
     ln -s /etc/php5/mods-available/mcrypt.ini /etc/php5/apache2/conf.d/mcrypt.ini
-
-# RUN apt-get update
-# RUN apt-get -yq install php5-geoip
-# RUN mkdir /usr/local/share/GeoIP
-# RUN cd /usr/share/local/GeoIP
-# RUN curl -O 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
-# RUN gunzip GeoLiteCity.dat.gz
 
 RUN a2enmod rewrite
 RUN a2enmod headers
@@ -66,5 +59,7 @@ ADD run.sh /run.sh
 VOLUME ["/var/log/apache2"]
 
 EXPOSE 80
+
+CMD ["/geoip.sh"]
 
 CMD ["/run.sh"]
